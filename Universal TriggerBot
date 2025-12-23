@@ -1,0 +1,93 @@
+-- // GUI Creation \\ --
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local ToggleBtn = Instance.new("TextButton")
+local BindInput = Instance.new("TextBox")
+local StatusLabel = Instance.new("TextLabel")
+
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "TriggerbotGui"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -75)
+MainFrame.Size = UDim2.new(0, 200, 0, 150)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "Triggerbot Settings"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+
+ToggleBtn.Parent = MainFrame
+ToggleBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
+ToggleBtn.Size = UDim2.new(0.8, 0, 0, 30)
+ToggleBtn.Text = "Status: OFF"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+
+BindInput.Parent = MainFrame
+BindInput.Position = UDim2.new(0.1, 0, 0.6, 0)
+BindInput.Size = UDim2.new(0.8, 0, 0, 30)
+BindInput.PlaceholderText = "Keybind (Default: E)"
+BindInput.Text = "E"
+
+-- // Variables & Logic \\ --
+_G.triggerbot = false
+local currentKeybind = Enum.KeyCode.E
+local player = game:GetService("Players").LocalPlayer
+local mouse = player:GetMouse()
+
+-- Update Button Appearance
+local function updateUI()
+    if _G.triggerbot then
+        ToggleBtn.Text = "Status: ON"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    else
+        ToggleBtn.Text = "Status: OFF"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end
+end
+
+-- Toggle Function
+ToggleBtn.MouseButton1Click:Connect(function()
+    _G.triggerbot = not _G.triggerbot
+    updateUI()
+end)
+
+-- Change Keybind Logic
+BindInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local newKey = BindInput.Text:upper()
+        currentKeybind = Enum.KeyCode[newKey]
+        BindInput.Text = newKey
+    end
+end)
+
+-- Input Detection
+game:GetService("UserInputService").InputBegan:Connect(function(Input, GameProcessedEvent)
+    if GameProcessedEvent then return end
+    if Input.KeyCode == currentKeybind then
+        _G.triggerbot = not _G.triggerbot
+        updateUI()
+    end
+end)
+
+-- Original Main Loop
+game:GetService("RunService").RenderStepped:Connect(function()
+    if not _G.triggerbot then return end
+    
+    local target = mouse.Target
+    if target and target.Parent then
+        local humanoid = target.Parent:FindFirstChildOfClass("Humanoid") or target.Parent.Parent:FindFirstChildOfClass("Humanoid")
+        
+        if humanoid and humanoid.Health > 0 and target.Parent.Name ~= player.Name then
+            mouse1press()
+            wait()
+            mouse1release()
+        end
+    end
+end)
